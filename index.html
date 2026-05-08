@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTR Thumbnail Strategy Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js" defer></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #6C2BFF;
+    --primary-light: #8B5CF6;
+    --primary-glow: rgba(108,43,255,0.4);
+    --secondary: #0D0F17;
+    --card: #141720;
+    --card-border: rgba(108,43,255,0.2);
+    --accent: #FFD600;
+    --accent2: #FF3D6B;
+    --text: #F0F0F8;
+    --muted: #6B7280;
+    --green: #00E5A0;
+    --surface: #1A1D2E;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--secondary);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(108,43,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,43,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid rgba(108,43,255,0.15);
+    background: rgba(13,15,23,0.9);
+    backdrop-filter: blur(20px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; max-width: 1280px; margin: 0 auto;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--primary), #FF3D6B);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.3px;
+  }
+  .logo-text span { color: var(--accent); }
+  .header-tag {
+    background: rgba(108,43,255,0.15);
+    border: 1px solid rgba(108,43,255,0.3);
+    color: var(--primary-light);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    padding: 64px 24px 48px;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(108,43,255,0.1);
+    border: 1px solid rgba(108,43,255,0.25);
+    padding: 6px 16px; border-radius: 30px;
+    font-size: 12px; font-weight: 600;
+    color: var(--primary-light);
+    letter-spacing: 0.6px; text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 5vw, 60px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -1.5px;
+    margin-bottom: 16px;
+  }
+  .hero h1 .accent { color: var(--accent); }
+  .hero h1 .glow {
+    background: linear-gradient(135deg, var(--primary-light), #FF3D6B);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p {
+    color: var(--muted); font-size: 16px; max-width: 520px; margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* Input Panel */
+  .input-panel {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 36px;
+    margin-bottom: 40px;
+    box-shadow: 0 0 60px rgba(108,43,255,0.08);
+  }
+  .input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .input-full { grid-column: 1 / -1; }
+
+  label {
+    display: block;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  label span { color: var(--primary-light); margin-right: 4px; }
+
+  textarea, input[type="text"], select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  textarea:focus, input:focus, select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+  select option { background: var(--card); }
+
+  .generate-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary), #9B4DFF);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 700;
+    letter-spacing: 0.3px;
+    padding: 16px 32px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-top: 8px;
+  }
+  .generate-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1));
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 30px var(--primary-glow); }
+  .generate-btn:hover::after { opacity: 1; }
+  .generate-btn:active { transform: translateY(0); }
+
+  /* Output Section */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+  }
+  .count-badge {
+    background: rgba(108,43,255,0.15);
+    border: 1px solid rgba(108,43,255,0.3);
+    color: var(--primary-light);
+    font-size: 12px; font-weight: 600;
+    padding: 4px 14px; border-radius: 20px;
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  /* Cards */
+  .thumb-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.4s ease both;
+  }
+  .thumb-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(108,43,255,0.15);
+    border-color: rgba(108,43,255,0.4);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    padding: 16px 20px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .type-badge {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 20px;
+  }
+  .ctr-pill {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700;
+  }
+  .ctr-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .card-body { padding: 16px 20px; }
+
+  .primary-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px; font-weight: 800;
+    letter-spacing: -0.3px; line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  .secondary-text {
+    font-size: 13px; font-weight: 500;
+    color: var(--muted); margin-bottom: 16px;
+    line-height: 1.4;
+  }
+
+  .info-row {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .info-chip {
+    font-size: 11px; font-weight: 600;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 3px 10px; border-radius: 20px;
+    color: #A0A0B8;
+  }
+
+  .section-label {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--muted); margin-bottom: 6px; margin-top: 14px;
+  }
+  .section-content {
+    font-size: 13px; color: #C0C0D8; line-height: 1.5;
+    background: rgba(255,255,255,0.03);
+    border-left: 2px solid var(--primary);
+    padding: 8px 12px; border-radius: 0 8px 8px 0;
+  }
+  .designer-brief {
+    font-size: 12px; line-height: 1.7;
+    color: #B0B0CC;
+    background: rgba(108,43,255,0.06);
+    border: 1px solid rgba(108,43,255,0.12);
+    border-radius: 8px; padding: 12px;
+    margin-top: 6px;
+  }
+  .designer-brief li { margin-left: 16px; margin-bottom: 3px; }
+
+  .color-row {
+    display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+  }
+  .color-swatch {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: #A0A0B8;
+  }
+  .swatch-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .ai-prompt-box {
+    background: #0D1117;
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 11.5px;
+    color: var(--green);
+    line-height: 1.6;
+    font-family: 'DM Mono', 'Courier New', monospace;
+    margin-top: 6px;
+    word-break: break-word;
+  }
+
+  /* Thumbnail Text Suggestion block — markdown format */
+  .thumb-text-suggestion {
+    margin: 16px 0 0;
+    background: rgba(255,214,0,0.04);
+    border: 1px solid rgba(255,214,0,0.2);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .tts-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 14px;
+    background: rgba(255,214,0,0.07);
+    border-bottom: 1px solid rgba(255,214,0,0.12);
+  }
+  .tts-header-left {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.9px;
+    color: #FFD600;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tts-copy-btn {
+    background: rgba(255,214,0,0.12);
+    border: 1px solid rgba(255,214,0,0.25);
+    border-radius: 6px;
+    color: #FFD600; font-size: 10px; font-weight: 700;
+    padding: 3px 10px; cursor: pointer;
+    transition: all 0.15s; letter-spacing: 0.3px;
+  }
+  .tts-copy-btn:hover { background: rgba(255,214,0,0.22); }
+  .tts-copy-btn.copied { background: rgba(0,229,160,0.15); border-color: rgba(0,229,160,0.3); color: #00E5A0; }
+
+  .tts-body { padding: 14px 16px; }
+  .tts-shorts-note {
+    font-size: 11px; color: #A0A0C0; font-style: italic;
+    margin-bottom: 12px; line-height: 1.5;
+  }
+  .tts-bullet-list { list-style: none; padding: 0; }
+  .tts-bullet-list li {
+    display: flex; gap: 8px; align-items: flex-start;
+    margin-bottom: 10px; font-size: 13px; line-height: 1.5; color: #D0D0E8;
+  }
+  .tts-bullet-list li:last-child { margin-bottom: 0; }
+  .tts-bullet-dot { color: #FFD600; font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .tts-label { color: var(--muted); font-size: 12px; }
+  .tts-value-primary {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 800;
+    color: #FFFFFF; letter-spacing: -0.3px;
+  }
+  .tts-value-secondary {
+    font-size: 13px; font-weight: 500; color: #C0C0D8; font-style: italic;
+  }
+  .tts-sub-list { list-style: none; padding: 0; margin-top: 6px; }
+  .tts-sub-list li {
+    display: flex; gap: 7px; align-items: flex-start;
+    margin-bottom: 6px; font-size: 12px; color: #A8A8C8; line-height: 1.5;
+  }
+  .tts-sub-dot { color: var(--muted); flex-shrink: 0; }
+  .tts-sub-list li:last-child { margin-bottom: 0; }
+
+  /* Copy buttons */
+  .copy-row {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 14px 20px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.02);
+  }
+  .copy-btn {
+    flex: 1; min-width: 80px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: #A0A0B8;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 7px 8px; cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .copy-btn:hover {
+    background: rgba(108,43,255,0.15);
+    border-color: rgba(108,43,255,0.3);
+    color: var(--primary-light);
+  }
+  .copy-btn.copied {
+    background: rgba(0,229,160,0.1);
+    border-color: rgba(0,229,160,0.3);
+    color: var(--green);
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 80px 24px;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-state h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px; font-weight: 700; margin-bottom: 8px;
+    color: #5A5A7A;
+  }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex; gap: 12px; align-items: center;
+    margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .toolbar-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    color: var(--muted); font-size: 13px; font-weight: 500;
+    padding: 9px 16px; cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+  }
+  .toolbar-btn:hover {
+    background: rgba(108,43,255,0.1);
+    border-color: rgba(108,43,255,0.25);
+    color: var(--primary-light);
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    .input-grid { grid-template-columns: 1fr; }
+    .input-full { grid-column: 1; }
+  }
+  @media (max-width: 600px) {
+    .cards-grid { grid-template-columns: 1fr; }
+    .input-panel { padding: 24px 18px; }
+    .hero { padding: 40px 16px 32px; }
+  }
+</style>
+</head>
+<body x-data="thumbGen()" x-init="init()">
+
+<!-- Header -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🎯</div>
+      <div class="logo-text">Thumb<span>CTR</span></div>
+    </div>
+    <div class="header-tag">✦ Strategy Generator</div>
+  </div>
+</header>
+
+<!-- Hero -->
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <span>⚡</span> No AI — Pure Psychology
+    </div>
+    <h1>
+      <span class="glow">CTR Thumbnail</span><br>
+      <span class="accent">Strategy</span> Generator
+    </h1>
+    <p>Generate 10 battle-tested thumbnail concepts with designer briefs, hook psychology, and AI image prompts — instantly.</p>
+  </div>
+
+  <!-- Input Panel -->
+  <div class="input-panel">
+    <div class="input-grid">
+      <div class="input-full">
+        <label><span>01</span> Video Topic / Script</label>
+        <textarea x-model="form.topic" placeholder="e.g. Best Elementor Addon for Beginners — Free vs Premium Comparison"></textarea>
+      </div>
+
+      <div>
+        <label><span>02</span> Focus Keyword</label>
+        <input type="text" x-model="form.keyword" placeholder="e.g. Elementor Addon">
+      </div>
+
+      <div>
+        <label><span>03</span> Target Audience</label>
+        <select x-model="form.audience">
+          <option value="Beginners">Beginners</option>
+          <option value="Freelancers">Freelancers</option>
+          <option value="Agencies">Agencies</option>
+          <option value="Developers">Developers</option>
+          <option value="Bloggers">Bloggers</option>
+          <option value="eCommerce Owners">eCommerce Owners</option>
+          <option value="SaaS Users">SaaS Users</option>
+        </select>
+      </div>
+
+      <div>
+        <label><span>04</span> Tone</label>
+        <select x-model="form.tone">
+          <option>Bold</option>
+          <option>Curious</option>
+          <option>Aggressive</option>
+          <option>Premium</option>
+          <option>Friendly</option>
+          <option>Minimal</option>
+          <option>Viral</option>
+          <option>Authority</option>
+        </select>
+      </div>
+
+      <div>
+        <label><span>05</span> Visual Style</label>
+        <select x-model="form.style">
+          <option>Before/After</option>
+          <option>Comparison</option>
+          <option>Face Reaction</option>
+          <option>Minimal</option>
+          <option>SaaS UI</option>
+          <option>Dark Tech</option>
+          <option>Feature Explosion</option>
+          <option>Transformation</option>
+          <option>Clean UI</option>
+          <option>Viral YouTube</option>
+        </select>
+      </div>
+
+      <div>
+        <label><span>06</span> Platform</label>
+        <select x-model="form.platform">
+          <option>YouTube</option>
+          <option>Facebook</option>
+          <option>Instagram</option>
+          <option>LinkedIn</option>
+          <option>X/Twitter</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="generate-btn" @click="generate()">
+      <span>⚡</span>
+      <span x-text="generated.length ? 'Regenerate Concepts' : 'Generate Thumbnail Concepts'"></span>
+      <span>→</span>
+    </button>
+  </div>
+
+  <!-- Output -->
+  <div x-show="generated.length > 0" x-cloak>
+    <div class="section-header">
+      <div class="section-title">🎯 Thumbnail Concepts</div>
+      <div class="count-badge" x-text="generated.length + ' concepts generated'"></div>
+    </div>
+
+    <div class="toolbar">
+      <button class="toolbar-btn" @click="generate()">🔄 Regenerate</button>
+    </div>
+
+    <div class="cards-grid">
+      <template x-for="(card, i) in generated" :key="i">
+        <div class="thumb-card" :style="'animation-delay:' + (i*0.07) + 's'">
+          <div class="card-header">
+            <span class="type-badge" :style="'background:' + card.badgeBg + ';color:' + card.badgeColor" x-text="card.type"></span>
+            <div class="ctr-pill">
+              <div class="ctr-dot" :style="'background:' + card.ctrColor"></div>
+              <span x-text="card.ctr + '/10'"></span>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="primary-text" x-text="card.primary"></div>
+            <div class="secondary-text" x-text="card.secondary"></div>
+
+            <!-- THUMBNAIL TEXT SUGGESTION — exact format -->
+            <div class="thumb-text-suggestion">
+              <div class="tts-header">
+                <div class="tts-header-left">🖼️ Thumbnail Text Suggestion</div>
+                <button class="tts-copy-btn" @click="copyTTS(card, $el)">📋 Copy</button>
+              </div>
+              <div class="tts-body">
+                <div class="tts-shorts-note">(Even Shorts benefit from a frame-1 visual hook in feeds where preview frames show)</div>
+                <ul class="tts-bullet-list">
+                  <li>
+                    <span class="tts-bullet-dot">•</span>
+                    <span>
+                      <span class="tts-label">Primary text (huge, bold): </span>
+                      <span class="tts-value-primary" x-text="card.tts.primary"></span>
+                    </span>
+                  </li>
+                  <li>
+                    <span class="tts-bullet-dot">•</span>
+                    <span>
+                      <span class="tts-label">Secondary text (smaller, top): </span>
+                      <span class="tts-value-secondary" x-text="card.tts.secondary"></span>
+                    </span>
+                  </li>
+                  <li>
+                    <span class="tts-bullet-dot">•</span>
+                    <span style="width:100%">
+                      <span class="tts-label">Visual suggestion:</span>
+                      <ul class="tts-sub-list" x-html="card.tts.visualItems"></ul>
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <span class="info-chip" x-text="'🧠 ' + card.psychology"></span>
+              <span class="info-chip" x-text="'😮 ' + card.expression"></span>
+              <span class="info-chip" x-text="'📐 ' + card.layout"></span>
+            </div>
+
+            <div class="section-label">Visual Idea</div>
+            <div class="section-content" x-text="card.visual"></div>
+
+            <div class="section-label">Attention Elements</div>
+            <div class="section-content" x-text="card.attention"></div>
+
+            <div class="section-label">Designer Brief</div>
+            <ul class="designer-brief" x-html="card.brief"></ul>
+
+            <div class="section-label">Color Direction</div>
+            <div class="color-row">
+              <template x-for="col in card.colors">
+                <div class="color-swatch">
+                  <div class="swatch-dot" :style="'background:' + col.hex"></div>
+                  <span x-text="col.label"></span>
+                </div>
+              </template>
+            </div>
+
+            <div class="section-label">AI Prompt</div>
+            <div class="ai-prompt-box" x-text="card.aiPrompt"></div>
+          </div>
+
+          <div class="copy-row">
+            <button class="copy-btn" @click="copyCard(card, $el)" style="flex:1">📋 Copy Full Concept</button>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" x-show="generated.length === 0">
+    <div class="empty-icon">🖼️</div>
+    <h3>No Concepts Yet</h3>
+    <p>Fill in the form above and hit Generate to create your thumbnail strategy.</p>
+  </div>
+
+  <div style="height: 80px;"></div>
+</div>
+
+<script>
+function thumbGen() {
+  return {
+    form: {
+      topic: '',
+      keyword: '',
+      audience: 'Beginners',
+      tone: 'Bold',
+      style: 'Before/After',
+      platform: 'YouTube'
+    },
+    generated: [],
+
+    init() {},
+
+    templates: [
+      {
+        type: 'Authority',
+        badgeBg: 'rgba(108,43,255,0.2)', badgeColor: '#A78BFA',
+        psychology: 'Social Proof',
+        expression: 'Confident',
+        layout: 'Text Left · Face Right',
+        ctr: '9.2', ctrColor: '#00E5A0',
+        primaryT: '{NUM}M+ USERS TRUST THIS',
+        secondaryT: 'The ONLY {keyword} You Need in {year}',
+        visual: 'Large trust metric centered with creator pointing at it confidently. Background: clean gradient with subtle logo marks.',
+        attention: 'Bold number in neon, trust badges, upward arrows, star ratings floating',
+        briefItems: [
+          'Dark navy gradient background (#0D1117 → #1A1D2E)',
+          'Massive yellow number front-center (e.g. "2M+")',
+          'Creator face: confident, pointing at number',
+          'Bottom-left: platform or plugin logo with glow',
+          'Add floating star ratings (★★★★★)',
+          'Red/yellow underline on key word',
+          'White headline bold — min 90pt visual weight'
+        ],
+        colors: [{hex:'#0D1117',label:'BG'},{hex:'#FFD600',label:'Number'},{hex:'#FFFFFF',label:'Text'},{hex:'#6C2BFF',label:'Glow'}],
+        aiPromptT: 'Cinematic YouTube thumbnail, dark navy background, confident creator pointing at glowing yellow "{num}M+ USERS" text, trust badges, star ratings floating, clean UI dashboard on left, {keyword} branding, hyper-realistic, 8k',
+        ttsT: {
+          primary: '{NUM}M+ USERS',
+          secondary: '"The #1 {keyword} — Trusted Worldwide"',
+          visualItems: [
+            'Huge yellow number dominates center of thumbnail',
+            'Creator bottom-right: confident, pointing at number',
+            'Dark navy background, star ratings (★★★★★) floating top-left',
+            'Logo badge bottom-left with glow — no clutter, let the number breathe',
+            'High contrast = Shorts thumbnail wins. Avoid clean/minimal here — Shorts need "scroll-stop" energy.'
+          ]
+        }
+      },
+      {
+        type: 'Curiosity Gap',
+        badgeBg: 'rgba(255,214,0,0.15)', badgeColor: '#FFD600',
+        psychology: 'Curiosity Gap',
+        expression: 'Shocked',
+        layout: 'Split — Left Text · Right Reaction',
+        ctr: '9.5', ctrColor: '#00E5A0',
+        primaryT: 'THEY LIED TO YOU ABOUT {keyword}',
+        secondaryT: 'What Nobody Tells {audience}',
+        visual: 'Shocked creator face on right. Left side: bold reveal text with a blurred/hidden element. High drama composition.',
+        attention: 'Motion blur on face, red warning icon, blurred secret revealed partially, arrows pointing inward',
+        briefItems: [
+          'Background: split — left dark charcoal, right deep crimson vignette',
+          'Creator: shocked expression, hand over mouth or eyes wide',
+          'Left: bold white text "THEY LIED" in caps',
+          'Add red circle with "!" warning symbol',
+          'Blur effect on a "secret" element (plugin, price, etc.)',
+          'Red X mark on what was believed before',
+          'Add subtle light-leak overlay on creator face'
+        ],
+        colors: [{hex:'#1A0A0A',label:'BG'},{hex:'#FF3D3D',label:'Warning'},{hex:'#FFFFFF',label:'Text'},{hex:'#FFD600',label:'Accent'}],
+        aiPromptT: 'Dramatic YouTube thumbnail, dark split background, shocked creator with hand over mouth, bold red text "THEY LIED TO YOU ABOUT {keyword}", warning icons, blurred secret element, high contrast, editorial style',
+        ttsT: {
+          primary: 'THEY LIED 🚨',
+          secondary: '"About {keyword} — The Truth Nobody Tells {audience}"',
+          visualItems: [
+            'Left half: "THEY LIED" in massive red caps — takes full left side',
+            'Right half: creator face — hand over mouth, eyes wide open',
+            'Red warning circle with ! icon between the two halves',
+            'Blurred "secret" element peeking from bottom edge',
+            'High contrast = Shorts thumbnail wins. Avoid clean/minimal here — Shorts need "scroll-stop" energy.'
+          ]
+        }
+      },
+      {
+        type: 'Transformation',
+        badgeBg: 'rgba(0,229,160,0.15)', badgeColor: '#00E5A0',
+        psychology: 'Before/After Contrast',
+        expression: 'Impressed',
+        layout: 'Left Before · Right After · Arrow Center',
+        ctr: '9.0', ctrColor: '#00E5A0',
+        primaryT: 'BEFORE vs AFTER: {keyword}',
+        secondaryT: '{audience} See Instant Results With This',
+        visual: 'Split screen — left chaotic/broken state, right clean/perfect result. Bold arrow or divider between.',
+        attention: 'Split divider arrow, red X on left, green checkmark on right, glow on after-side',
+        briefItems: [
+          'Vertical split: left = desaturated/red tint (bad state), right = vibrant/green tint (good)',
+          'Bold "BEFORE" and "AFTER" labels on each side',
+          'Central arrow or lightning bolt divider',
+          'Creator face: small top-right corner, impressed/thumbs-up',
+          'Right side: clean UI screenshot or result metric',
+          'Green checkmark overlay bottom-right',
+          'Light rays or glow effect on right half'
+        ],
+        colors: [{hex:'#111111',label:'BG'},{hex:'#FF3D3D',label:'Before'},{hex:'#00E5A0',label:'After'},{hex:'#FFFFFF',label:'Text'}],
+        aiPromptT: 'YouTube thumbnail split-screen, left side: chaotic dark workspace, right side: clean glowing dashboard, bold BEFORE AFTER labels, central lightning divider, green glow on right, {keyword} theme',
+        ttsT: {
+          primary: 'BEFORE ❌  →  AFTER ✅',
+          secondary: '"{audience} Results With {keyword} — Real Comparison"',
+          visualItems: [
+            'Split-screen: left side red-tinted with chaotic/broken state + "BEFORE" label',
+            'Right side green-tinted with clean UI result + "AFTER" label',
+            'Bold arrow or lightning bolt divider between the two halves',
+            'Your face/expression in bottom corner pointing to the AFTER side (shocked/excited expression)',
+            'High contrast = Shorts thumbnail wins. Avoid clean/minimal here — Shorts need "scroll-stop" energy.'
+          ]
+        }
+      },
+      {
+        type: 'Speed/FOMO',
+        badgeBg: 'rgba(255,61,107,0.2)', badgeColor: '#FF3D6B',
+        psychology: 'Fear of Missing Out',
+        expression: 'Urgent',
+        layout: 'Full Bleed · Centered CTA',
+        ctr: '8.8', ctrColor: '#FFD600',
+        primaryT: 'STOP WASTING TIME ON {keyword}',
+        secondaryT: 'Do THIS Instead (Takes 5 Minutes)',
+        visual: 'Timer or clock prominently displayed. Creator with urgent expression pointing at clock. High contrast red.',
+        attention: 'Ticking clock graphic, speed lines, red background pulse, bold underline',
+        briefItems: [
+          'Background: deep red to black gradient (urgency)',
+          'Large clock/timer icon centered or top-right',
+          'Creator: pointing at viewer or clock, urgent expression',
+          'Bold "STOP" in massive white text',
+          'Red speed lines or motion blur in background',
+          'Time badge: "5 MIN" in yellow pill',
+          'Subtle fire/energy particle effects'
+        ],
+        colors: [{hex:'#2D0000',label:'BG'},{hex:'#FF3D3D',label:'Urgent'},{hex:'#FFD600',label:'Timer'},{hex:'#FFFFFF',label:'Text'}],
+        aiPromptT: 'Urgent YouTube thumbnail, deep red background, large glowing clock, creator pointing at viewer with urgent expression, bold white STOP text, speed lines, fire particles, {keyword} context',
+        ttsT: {
+          primary: 'STOP ✋',
+          secondary: '"Don\'t Use {keyword} Before Watching This"',
+          visualItems: [
+            'Single word "STOP" in massive white caps — dominates upper half of thumbnail',
+            'Creator bottom-left pointing directly AT the viewer (eye contact = scroll-stop)',
+            'Clock/timer icon top-right corner, red background with speed lines',
+            'Yellow "5 MIN FIX" pill badge overlaid bottom-right',
+            'High contrast = Shorts thumbnail wins. Avoid clean/minimal here — Shorts need "scroll-stop" energy.'
+          ]
+        }
+      },
+      {
+        type: 'Social Proof',
+        badgeBg: 'rgba(255,214,0,0.15)', badgeColor: '#FFD600',
+        psychology: 'Bandwagon + Validation',
+        expression: 'Excited',
+        layout: 'Metric Centered · Face Bottom-Left',
+        ctr: '8.9', ctrColor: '#00E5A0',
+        primaryT: '{NUM}K {audience} CAN\'T BE WRONG',
+        secondaryT: 'Join Them — Free {keyword} Setup',
+        visual: 'Large central number with crowd/user grid or avatars behind. Creator excited in corner.',
+        attention: 'User avatar grid, rising graph, confetti particles, star ratings',
+        briefItems: [
+          'Background: dark purple gradient with subtle grid',
+          'Massive central number: "{num}K+" in bold gold',
+          'Small user avatar mosaic behind number (20+ faces)',
+          'Creator: bottom-left, excited thumbs up',
+          'Rising arrow/graph line in background',
+          'Stars or badge icons floating',
+          'Gradient underline on number'
+        ],
+        colors: [{hex:'#0F0A1A',label:'BG'},{hex:'#FFD600',label:'Number'},{hex:'#9B4DFF',label:'Glow'},{hex:'#FFFFFF',label:'Text'}],
+        aiPromptT: 'YouTube thumbnail with massive glowing number "{num}K+" centered, dark purple background, user avatar mosaic, excited creator bottom-left, rising graph, confetti, {keyword} branding, social proof visual',
+        ttsT: {
+          primary: '{NUM}K+ {audience}',
+          secondary: '"All Using {keyword} — Here\'s Why"',
+          visualItems: [
+            'Giant number "{num}K+" takes 60% of thumbnail space — gold color, front and center',
+            'User avatar faces in a mosaic grid behind the number (20+ faces)',
+            'Creator bottom-left: excited expression, thumbs up',
+            'Rising arrow/graph line in background with confetti particles',
+            'High contrast = Shorts thumbnail wins. Avoid clean/minimal here — Shorts need "scroll-stop" energy.'
+          ]
+        }
+      },
+      {
+        type: 'Comparison',
+        badgeBg: 'rgba(0,120,255,0.2)', badgeColor: '#60A5FA',
+        psychology: 'Choice Simplification',
+        expression: 'Curious',
+        layout: 'Left A · VS Center · Right B',
+        ctr: '8.7', ctrColor: '#FFD600',
+        primaryT: '{keyword} vs THE REST',
+        secondaryT: 'Honest Winner Revealed for {audience}',
+        visual: 'Two products/tools on either side with VS badge center. Creator face as judge.',
+        attention: 'VS badge glow, checkmark on winner, X on loser, creator as referee',
+        briefItems: [
+          'Background: neutral dark with subtle gradient halves',
+          'Left: competitor tool (slightly dimmer, red tint)',
+          'Right: featured tool (brighter, green/gold tint)',
+          'Center: bold "VS" badge with glow',
+          'Creator face small at top, eyebrow raised (judge pose)',
+          'Winner side: green checkmark + glow effect',
+          'Loser side: red X overlay, desaturated'
+        ],
+        colors: [{hex:'#111827',label:'BG'},{hex:'#FF3D3D',label:'Loser'},{hex:'#00E5A0',label:'Winner'},{hex:'#FFD600',label:'VS Badge'}],
+        aiPromptT: 'YouTube comparison thumbnail, two tools side by side, large glowing VS in center, winner tool with green glow and checkmark, loser with red X, dark background, creator face at top looking curious, {keyword}',
+        ttsT: {
+          primary: '{keyword} ✅  VS  ❌ REST',
+          secondary: '"Which One Wins for {audience}? (Honest Answer)"',
+          visualItems: [
+            'Split-screen: left side red-tinted with competitor logo + struck-through ❌ overlay',
+            'Right side green-tinted with {keyword} logo + glowing ✅ checkmark',
+            'Your face/expression in bottom corner pointing to the {keyword} side (shocked/excited expression)',
+            'Bold "VS" badge glowing at the center divider',
+            'High contrast = Shorts thumbnail wins. Avoid clean/minimal here — Shorts need "scroll-stop" energy.'
+          ]
+        }
+      },
+      {
+        type: 'Tutorial/How-To',
+        badgeBg: 'rgba(99,102,241,0.2)', badgeColor: '#A5B4FC',
+        psychology: 'Clarity + Speed Promise',
+        expression: 'Helpful',
+        layout: 'Step Numbers Left · UI Right',
+        ctr: '8.4', ctrColor: '#FFD600',
+        primaryT: 'HOW TO {keyword} IN 10 MINUTES',
+        secondaryT: 'Complete {audience} Tutorial (FREE)',
+        visual: 'Clean numbered steps on left. Finished result UI screenshot on right. Professional and approachable.',
+        attention: 'Step numbers in circles, checkmark progression, clean UI mock on right, time badge',
+        briefItems: [
+          'Background: clean dark (#1A1D2E)',
+          'Left side: bold numbered steps 1-2-3 in circles',
+          'Right side: clean UI/dashboard screenshot with glow',
+          'Creator: small top-left, friendly smile',
+          '"FREE" badge bottom-right in yellow pill',
+          '"10 MIN" time indicator top-right',
+          'Thin progress bar at top of thumbnail'
+        ],
+        colors: [{hex:'#1A1D2E',label:'BG'},{hex:'#6C2BFF',label:'Steps'},{hex:'#FFD600',label:'FREE Badge'},{hex:'#FFFFFF',label:'Text'}],
+        aiPromptT: 'Professional YouTube tutorial thumbnail, dark background, numbered steps 1-2-3 in glowing circles on left, clean UI screenshot right, {keyword} tutorial, FREE badge, 10 MIN label, creator face top corner',
+        ttsT: {
+          primary: 'HOW TO {keyword}',
+          secondary: '"Step-by-Step for {audience} — FREE (10 Min)"',
+          visualItems: [
+            'Bold "HOW TO" in medium caps at top, "{keyword}" in large bold below it',
+            'Left side: numbered circles 1 → 2 → 3 stacked vertically',
+            'Right side: clean finished result UI screenshot with subtle glow',
+            'Yellow "FREE" badge bottom-right, "10 MIN" chip top-right corner',
+            'High contrast = Shorts thumbnail wins. Avoid clean/minimal here — Shorts need "scroll-stop" energy.'
+          ]
+        }
+      },
+      {
+        type: 'Minimalist',
+        badgeBg: 'rgba(255,255,255,0.08)', badgeColor: '#A0A0B8',
+        psychology: 'Clarity + Premium Signal',
+        expression: 'Confident',
+        layout: 'Text Center · Clean Negative Space',
+        ctr: '8.1', ctrColor: '#FFD600',
+        primaryT: 'THE {keyword} GUIDE',
+        secondaryT: 'Everything {audience} Need. Nothing Extra.',
+        visual: 'Ultra-clean composition. Single focal element. Generous white space or dark space. Premium feel.',
+        attention: 'Single accent color line, minimal geometric shape, clean typography hierarchy',
+        briefItems: [
+          'Background: flat #0D0F17 or white (choose based on brand)',
+          'Single large centered headline — massive Syne or Clash Display font',
+          'One accent: thin horizontal gold or purple line',
+          'No face (or very minimal, edge-cropped)',
+          'Subtle brand logo bottom-right only',
+          'Maximum negative space — nothing clutters',
+          'One gradient word highlight only'
+        ],
+        colors: [{hex:'#0D0F17',label:'BG'},{hex:'#FFD600',label:'Accent'},{hex:'#FFFFFF',label:'Text'},{hex:'#2A2D3E',label:'Surface'}],
+        aiPromptT: 'Minimal premium YouTube thumbnail, near-black background, large bold centered text "{keyword} GUIDE", single gold accent line, generous negative space, no clutter, editorial style, luxury aesthetic',
+        ttsT: {
+          primary: 'THE {keyword} GUIDE',
+          secondary: '"Everything. Nothing Extra."',
+          visualItems: [
+            'Pure typographic thumbnail — "{keyword}" in massive display font, 80% of height',
+            '"THE" in small caps above it, "GUIDE" smaller below',
+            'Single gold horizontal accent line — nothing else on the canvas',
+            'Near-black background, no face, no clutter',
+            'Note: Minimal style works for authority channels — for Shorts feed, higher-energy styles outperform.'
+          ]
+        }
+      },
+      {
+        type: 'Feature Explosion',
+        badgeBg: 'rgba(255,100,50,0.2)', badgeColor: '#FFA07A',
+        psychology: 'Value Overload + Overwhelm-to-Desire',
+        expression: 'Amazed',
+        layout: 'Feature Grid · Creator Anchor Bottom',
+        ctr: '8.6', ctrColor: '#FFD600',
+        primaryT: 'EVERYTHING {keyword} CAN DO',
+        secondaryT: '{audience} Don\'t Know Half of This',
+        visual: 'Explosive grid of feature icons or UI cards bursting outward. Creator looking amazed in corner.',
+        attention: 'Icon explosion, radial burst lines, floating feature badges, glow on center logo',
+        briefItems: [
+          'Background: dark with radial gradient burst from center',
+          'Center: product logo with strong glow',
+          'Surrounding: 6-8 floating feature icons/badges arranged in explosion',
+          'Creator bottom-left: eyes wide, "amazed" pose',
+          'Speed/burst lines radiating from center',
+          'Each icon has subtle neon glow',
+          'Top text: bold white caps headline'
+        ],
+        colors: [{hex:'#0A0A14',label:'BG'},{hex:'#FFD600',label:'Icons'},{hex:'#FF3D6B',label:'Burst'},{hex:'#6C2BFF',label:'Glow'}],
+        aiPromptT: 'YouTube thumbnail explosion layout, dark background with radial burst, {keyword} logo center glowing, 8 floating feature icons in circular arrangement, amazed creator bottom-left, neon accents, energetic',
+        ttsT: {
+          primary: 'EVERYTHING {keyword} CAN DO',
+          secondary: '"{audience} Don\'t Know Half of These Features"',
+          visualItems: [
+            '"EVERYTHING" in bold white caps at top-center of thumbnail',
+            '{keyword} logo in center with strong radial glow and burst lines',
+            '6–8 feature icons exploding outward in a circle around the logo',
+            'Your face/expression in bottom corner — eyes wide, amazed/shocked expression',
+            'High contrast = Shorts thumbnail wins. Avoid clean/minimal here — Shorts need "scroll-stop" energy.'
+          ]
+        }
+      },
+      {
+        type: 'Dark Tech',
+        badgeBg: 'rgba(0,229,160,0.15)', badgeColor: '#00E5A0',
+        psychology: 'Aspiration + Premium Exclusivity',
+        expression: 'Smug',
+        layout: 'Code/Dashboard Left · Creator Right',
+        ctr: '8.5', ctrColor: '#FFD600',
+        primaryT: 'THIS {keyword} SETUP IS INSANE',
+        secondaryT: 'Pro-Level Results for {audience}',
+        visual: 'Dark terminal/dashboard aesthetic. Matrix-style green text or clean UI in background. Creator looks elite.',
+        attention: 'Code rain effect, neon green terminals, holographic overlay, elite creator pose',
+        briefItems: [
+          'Background: near-black with subtle green matrix/code rain',
+          'Left: terminal window or dashboard with green text glow',
+          'Right: creator — smug expression, arms crossed',
+          'Neon green accent throughout',
+          'Top badge: "PRO SETUP" or "INSANE" label',
+          'Holographic/scanline overlay texture',
+          'Bottom: subtle brand logo in code-green'
+        ],
+        colors: [{hex:'#050A07',label:'BG'},{hex:'#00E5A0',label:'Neon'},{hex:'#FFFFFF',label:'Text'},{hex:'#0D2A1A',label:'Surface'}],
+        aiPromptT: 'Dark cyberpunk YouTube thumbnail, near-black background with matrix code rain, glowing terminal dashboard, {keyword} setup, elite creator arms crossed smug expression, neon green accents, holographic overlay, cinematic',
+        ttsT: {
+          primary: 'THIS {keyword} SETUP IS INSANE',
+          secondary: '"Pro Results for {audience} — No Budget Needed"',
+          visualItems: [
+            '"THIS SETUP IS" in small neon green at top, "INSANE" in massive white caps below it',
+            'Right side: creator — arms crossed, smug confident expression',
+            'Left side: glowing terminal/dashboard screenshot with neon green text',
+            'Matrix-style code rain in background with holographic overlay texture',
+            'High contrast = Shorts thumbnail wins. Avoid clean/minimal here — Shorts need "scroll-stop" energy.'
+          ]
+        }
+      }
+    ],
+
+    generate() {
+      const kw = this.form.keyword || this.form.topic.split(' ').slice(0,3).join(' ') || 'Your Plugin';
+      const aud = this.form.audience;
+      const num = ['1.2M', '800K', '2M', '500K', '3M'][Math.floor(Math.random()*5)];
+      const year = new Date().getFullYear();
+
+      // shuffle templates and pick variations
+      const shuffled = [...this.templates].sort(() => Math.random() - 0.5);
+      const count = 10;
+
+      this.generated = shuffled.slice(0, count).map(t => {
+        const replace = (str) => str
+          .replace(/{keyword}/g, kw)
+          .replace(/{audience}/g, aud)
+          .replace(/{num}/gi, num)
+          .replace(/{NUM}/g, num)
+          .replace(/{year}/g, year);
+
+        const briefHTML = t.briefItems.map(b => `<li>${replace(b)}</li>`).join('');
+
+        const tts = {
+          primary: replace(t.ttsT.primary),
+          secondary: replace(t.ttsT.secondary),
+          visualItems: t.ttsT.visualItems.map(v => `<li><span class="tts-sub-dot">○</span><span>${replace(v)}</span></li>`).join(''),
+          visualPlain: t.ttsT.visualItems.map(v => '   ○ ' + replace(v)).join('\n')
+        };
+
+        return {
+          ...t,
+          primary: replace(t.primaryT),
+          secondary: replace(t.secondaryT),
+          visual: replace(t.visual),
+          attention: replace(t.attention),
+          brief: briefHTML,
+          aiPrompt: replace(t.aiPromptT),
+          tts
+        };
+      });
+    },
+
+    copyText(text, btn) {
+      // strip HTML tags for brief
+      const clean = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g,' ').trim();
+      navigator.clipboard.writeText(clean).then(() => {
+        btn.classList.add('copied');
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied';
+        setTimeout(() => { btn.classList.remove('copied'); btn.textContent = orig; }, 1500);
+      });
+    },
+
+    copyTTS(card, btn) {
+      const text = `THUMBNAIL TEXT SUGGESTION
+(Even Shorts benefit from a frame-1 visual hook in feeds where preview frames show)
+
+• Primary text (huge, bold): ${card.tts.primary}
+• Secondary text (smaller, top): ${card.tts.secondary}
+• Visual suggestion:
+${card.tts.visualPlain}`;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.classList.add('copied');
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied';
+        setTimeout(() => { btn.classList.remove('copied'); btn.textContent = orig; }, 1500);
+      });
+    },
+
+    copyCard(card, btn) {
+      const briefText = card.briefItems ? card.briefItems.join('\n') : card.brief.replace(/<[^>]+>/g,' ');
+      const text = `THUMBNAIL CONCEPT: ${card.type} | CTR ${card.ctr}/10 | ${card.psychology}
+
+THUMBNAIL TEXT SUGGESTION
+(Even Shorts benefit from a frame-1 visual hook in feeds where preview frames show)
+
+• Primary text (huge, bold): ${card.tts.primary}
+• Secondary text (smaller, top): ${card.tts.secondary}
+• Visual suggestion:
+${card.tts.visualPlain}
+
+CONCEPT HOOK
+Primary: ${card.primary}
+Secondary: ${card.secondary}
+
+Expression: ${card.expression} | Layout: ${card.layout}
+
+DESIGNER BRIEF
+${briefText}
+
+ATTENTION ELEMENTS: ${card.attention}
+
+AI PROMPT:
+${card.aiPrompt}`.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        btn.classList.add('copied');
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => { btn.classList.remove('copied'); btn.textContent = orig; }, 1500);
+      });
+    }
+  };
+}
+</script>
+</body>
+</html>
